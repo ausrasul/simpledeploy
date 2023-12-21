@@ -11,16 +11,21 @@ def clone_repo_if_not_exist(repo_name, repo_dir):
     if not os.path.exists(repo_dir):
         # Clone the repo if it doesn't exist
         subprocess.run(['git', 'clone', repo_name, repo_dir], check=True)
+        return True
+    else:
+        return False
 
 def git_clone_or_pull(repo_name, repo_dir):
     # Change to the directory specified in the configuration file
-    clone_repo_if_not_exist(repo_name, repo_dir)
-
-    os.chdir(repo_dir)
-    prev_hash = subprocess.run(['git', 'rev-parse', 'HEAD'], stdout=subprocess.PIPE, text=True).stdout.strip()
-    subprocess.run(['git', 'pull'], check=True)
-    this_hash = subprocess.run(['git', 'rev-parse', 'HEAD'], stdout=subprocess.PIPE, text=True).stdout.strip()
-    return prev_hash,this_hash
+    cloned = clone_repo_if_not_exist(repo_name, repo_dir)
+    if cloned:
+        return 1, 2
+    else:
+        os.chdir(repo_dir)
+        prev_hash = subprocess.run(['git', 'rev-parse', 'HEAD'], stdout=subprocess.PIPE, text=True).stdout.strip()
+        subprocess.run(['git', 'pull'], check=True)
+        this_hash = subprocess.run(['git', 'rev-parse', 'HEAD'], stdout=subprocess.PIPE, text=True).stdout.strip()
+        return prev_hash,this_hash
 
 def stop_and_remove_container(container_name):
     try:
