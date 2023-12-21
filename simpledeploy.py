@@ -27,6 +27,13 @@ def git_clone_or_pull(repo_name, repo_dir):
         this_hash = subprocess.run(['git', 'rev-parse', 'HEAD'], stdout=subprocess.PIPE, text=True).stdout.strip()
         return prev_hash,this_hash
 
+def remove_container(container_name):
+    try:
+        subprocess.run(['podman', 'rm', '-f', container_name], check=True)
+        print(f"Container {container_name} stopped successfully.")
+    except subprocess.CalledProcessError as e:
+        print(f"An error occurred: {e.stderr}")
+
 def stop_and_remove_container(container_name):
     try:
         subprocess.run(['podman', 'stop', container_name], check=True)
@@ -34,7 +41,7 @@ def stop_and_remove_container(container_name):
     except subprocess.CalledProcessError as e:
         print(f"An error occurred: {e.stderr}")
     finally:
-        subprocess.run(['podman', 'rm', '-f', container_name], check=True)
+        remove_container(container_name)
 
 def main():
     # Get the directory of the current script
