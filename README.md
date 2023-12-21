@@ -5,6 +5,38 @@ rather than the traditional method of bringing the code to the build process.
 This approach simplifies the deployment pipeline and offers a streamlined, efficient workflow for developers.
 SimpleDeploy works with any Git source control provider, making it a versatile tool for various development environments.
 
+      +------------+
+      |  Git Repo  |
+      +------------+
+            |
+            v
++------------------------+
+|   Deployment Server    |
+|  Running SimpleDeploy  |
+|                        |
+|  +------------------+  |
+|  | Pull Latest Code |  |
+|  +------------------+  |
+|    on new | commits    |
+|           v            |
+|  +------------------+  |
+|  | Read Config File |  |
+|  +------------------+  |
+|           |            |
+|           v            |
+|  +------------------+  |
+|  | Execute Workflow |  |
+|  +------------------+  |
+|           |            |
+|           v            |
+|  +------------------+  |
+|  | Generate Report  |  |
+|  |        Or        |  |
+|  |  Serve content   |  |
+|  +------------------+  |
++------------------------+
+
+
 ## Usage
 
 On the server where the deployment happens, clone this repository.
