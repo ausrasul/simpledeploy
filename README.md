@@ -1,8 +1,13 @@
 # SimpleDeploy
 SimpleDeploy is a unique Continuous Integration/Continuous Deployment (CI/CD) solution tailored for individual developers.
+
 It operates directly on the deployment server, bringing the build process to the code,
 rather than the traditional method of bringing the code to the build process.
+
 This approach simplifies the deployment pipeline and offers a streamlined, efficient workflow for developers.
+
+The deployment server doesn't need to provide access for a CI/CD pipeline.
+
 SimpleDeploy works with any Git source control provider, making it a versatile tool for various development environments.
 
               +------------+
