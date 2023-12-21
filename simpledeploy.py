@@ -48,7 +48,7 @@ def main():
     os.chdir(repo_dir)
     print(prev_hash, this_hash)
     # Check if there are any new commits since the last run
-    if prev_hash == this_hash:
+    if prev_hash != this_hash:
         ci_config = read_config('./ci.ini')['CI']
         print(ci_config['CI_COMMAND'])
         # check if podman container sexists
