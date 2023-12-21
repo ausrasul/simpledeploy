@@ -22,6 +22,15 @@ def git_clone_or_pull(repo_name, repo_dir):
     this_hash = subprocess.run(['git', 'rev-parse', 'HEAD'], stdout=subprocess.PIPE, text=True).stdout.strip()
     return prev_hash,this_hash
 
+def stop_and_remove_container(container_name):
+    try:
+        subprocess.run(['podman', 'stop', container_name], check=True)
+        print(f"Container {container_name} stopped successfully.")
+    except subprocess.CalledProcessError as e:
+        print(f"An error occurred: {e.stderr}")
+    finally:
+        subprocess.run(['podman', 'rm', '-f', container_name], check=True)
+
 def main():
     # Get the directory of the current script
     script_dir = os.path.dirname(os.path.realpath(__file__))
@@ -42,15 +51,17 @@ def main():
     if prev_hash == this_hash:
         ci_config = read_config('./ci.ini')['CI']
         print(ci_config['CI_COMMAND'])
+        # check if podman container sexists
+        stop_and_remove_container(ci_config['CI_NAME'])
+        subprocess.run(['podman', 'rm', '-f', ci_config['CI_NAME']])
         subprocess.run(['podman', 'run',
                         '-d',
                         '-p', ci_config['CI_PORT'],
                         '-v', f"{repo_dir}:{repo_mount_dir}",
                         '-w', repo_mount_dir,
+                        '--name', ci_config['CI_NAME'],
                         ci_config['CI_IMAGE'],
                         'bash', '-c', ci_config['CI_COMMAND']], check=True)
-
-
 
 if __name__ == '__main__':
     main()

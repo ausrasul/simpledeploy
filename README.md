@@ -63,6 +63,9 @@ SimpleDeploy works with any Git source control provider, making it a versatile t
   In your repository, create a file ci.ini and configure it:
 
     [CI]
+    CI_NAME:   podman container name, example open_math
+               it should be unique on a server running SimpleDeploy.
+
     CI_IMAGE:   podman/docker image name and version,
                 example node:18
                 
