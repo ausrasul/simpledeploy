@@ -1,8 +1,15 @@
 {
     "repo": {
-        "dir": "../open_math",
+        "dir": "../open_math3",
         "cfg_file": "ci.json",
         "url": "https://github.com/ausrasul/open_math.git",
-        "mount_dir": "/pipeline"
+        "mount_dir": "/pipeline",
+        "trigger": {
+            "branch": "master",
+            
+            "type": "github",
+            "events": ["push"],
+            "branches": ["master"]
+        }
     }
 }
