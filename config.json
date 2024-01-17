@@ -1,0 +1,8 @@
+{
+    "repo": {
+        "dir": "../open_math",
+        "cfg_file": "ci.json",
+        "url": "https://github.com/ausrasul/open_math.git",
+        "mount_dir": "/pipeline"
+    }
+}
