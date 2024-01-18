@@ -160,7 +160,7 @@ def main():
     os.chdir(repo.dir)
     print(prev_hash, this_hash)
     # Check if there are any new commits since the last run
-    if prev_hash == this_hash:
+    if prev_hash != this_hash:
         app = App(repo)
         app.stop()
         app.start()
