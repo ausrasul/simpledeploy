@@ -6,11 +6,6 @@ import json
 def this_script_dir():
     return os.path.dirname(os.path.realpath(__file__))
 
-def read_ini_config(filename):
-    config = configparser.ConfigParser()
-    config.read(filename)
-    return {k: v for k, v in config.items()}
-
 def read_config(filename):
     # reads json config file
     with open(filename, 'r') as f:
@@ -34,8 +29,10 @@ class Container:
         self.image = cfg.get('image', 'ubuntu:latest')
         self.command = cfg.get('command')
         self.ports = cfg.get('ports', [])
+        self.volume_names = cfg.get('volume_names', [])
         self.volumes = cfg.get('volumes', [])
         self.work_dir = cfg.get('work_dir')
+        self.envs = cfg.get('env', [])
 
     def _remove(self):
         try:
@@ -43,6 +40,7 @@ class Container:
             print(f"Container {self.name} removed.")
         except subprocess.CalledProcessError as e:
             print(f"An error occurred: {e.stderr}")
+
     def stop(self):
         try:
             subprocess.run(['podman', 'stop', self.name], check=True)
@@ -53,6 +51,7 @@ class Container:
             self._remove()
     
     def start(self, podname):
+        self._create_volumes()
         command = [
             'podman', 'run', '-d',
             '--name', self.name,
@@ -62,11 +61,21 @@ class Container:
             command.extend(['-v', volume])
         if self.work_dir:
             command.extend(['-w', self.work_dir])
+        for env in self.envs:
+            command.extend(['-e', env])
+        # add options before this line
         command.append(self.image)
         if self.command:
             command.extend(['bash', '-c', self.command])
-        print(command)
         subprocess.run(command, check=True)
+
+    def _create_volumes(self):
+        for volume in self.volume_names:
+            try:
+                subprocess.run(['podman', 'volume', 'create', volume], check=True)
+                print(f"Volume {volume} created.")
+            except subprocess.CalledProcessError as e:
+                print(f"An error occurred: {e.stderr}")
 
 
 class App:
@@ -76,13 +85,12 @@ class App:
         config = read_config(abs_file_name)
 
         self.name = config['name']
-
         app = config.get('app', {})
-        volumes = app.get('volumes',[])
-        volumes.extend([
+        app['volumes_names'] = config.get('volumes', [])
+        app['volumes'] = app.get('volumes', [])
+        app['volumes'].extend([
             f"{repo.dir}:{repo.mount_dir}"
         ])
-        app['volumes'] = volumes
         app['work_dir'] = repo.mount_dir
         self.container = Container(app)
 
@@ -152,7 +160,7 @@ def main():
     os.chdir(repo.dir)
     print(prev_hash, this_hash)
     # Check if there are any new commits since the last run
-    if prev_hash != this_hash:
+    if prev_hash == this_hash:
         app = App(repo)
         app.stop()
         app.start()

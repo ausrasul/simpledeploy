@@ -27,12 +27,12 @@ class TestHook(unittest.TestCase):
         self.assertIs(os.path.exists(repo_dir), True)
         shutil.rmtree(repo_dir)
     def test_read_config(self):
-        config_file = 'test.ini'
+        config_file = 'test.json'
         with open(config_file, 'w') as f:
-            f.write('[DEFAULT]\nkey1 = value1\nkey2 = value2')
+            f.write('{ "app": {"key1": "value1", "key2": "value2"} }')
         expected_result = {'key1': 'value1', 'key2': 'value2'}
         result = simpledeploy.read_config(config_file)
-        self.assertEqual(result['DEFAULT'], expected_result)
+        self.assertEqual(result['app'], expected_result)
         os.remove(config_file)
 
 if __name__ == '__main__':

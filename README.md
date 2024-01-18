@@ -47,33 +47,75 @@ SimpleDeploy works with any Git source control provider, making it a versatile t
   On the server where the deployment happens, clone this repository.
 
 ### Configure SimpleDeploy
-  Configure the config.ini file:
+  Configure the config.json file:
 
-    REPO_DIR:       Where the code repo will be cloned.
-                    Path is relative to SimpleDeploy config file.
-                    example ../open_math
-                    
-    REPO_NAME:      The link to the git repository.
-                    example https://github.com/ausrasul/open_math
-                    
-    REPO_MOUNT_DIR: Where in the podman container the repository will be mounted.
-                    example /open_math
+    {
+        "repo": {
+            "dir": "../open_math",
+            "cfg_file": "./ci.json",
+            "url": "https://github.com/ausrasul/open_math.git",
+            "mount_dir": "/pipeline",
+            "trigger": {
+                "branch": "master",
+                "tag": "open_math-v*.*.*"
+            }
+        }
+    }
+
+  dir: Where the code repo will be cloned.
+       Relative directory from where SimpleDeploy is.
+  cfg_file: the ci/cd config file, path relative to the repository.
+  url: url to git repo.
+  mount_dir: Where in the podman container the repository will be mounted.
+  trigger: WIP.
 
 ### Configure your project
-  In your repository, create a file ci.ini and configure it:
+  In your repository, create a json file (must be placed in "cfg_file" directory specified above) and configure it:
 
-    [CI]
-    CI_NAME:   podman container name, example open_math
-               it should be unique on a server running SimpleDeploy.
+    {
+        "volumes":[
+            "redis_volume"
+        ],
+        "name": "open_math",
+        "app": {
+            "name": "open_math_container",
+            "hostname": "open_math",
+            "image": "node:18",
+            "command": "node ./server.js",
+            "env": [
+                "NODE_ENV=production"
+            ],
+            "ports": [
+                "8080:3001"
+            ]
+        },
+        "services": [
+            {
+                "name": "my_redis",
+                "image": "redis",
+                "hostname": "redis",
+                "volumes": [
+                    "redis_volume:/data"
+                ],
+                "env": [
+                    "myenv=production"
+                ]
+            }
+        ]
+    }
 
-    CI_IMAGE:   podman/docker image name and version,
-                example node:18
-                
-    CI_COMMAND: commands to run on your repo (inside the container),
-                example npm install && npm run build && node ./server.js
-                
-    CI_PORT: port mapping to be exposed, example 8080:3001
-             where 3001 is the port served by the repo, 8080 is the port mapped on the host.
+    volumes: list of volumes to be created.
+    name: the podman pod's name.
+    app:
+        name: container name, must be unique per server.
+        hostname: hostname (this is not supported yet, the pod's name is used instead)
+        image: podman/docker image name and version
+        command: command used as entry point.
+        env: env.
+        ports: ports to be published, unique per pod, should not conflict with ports from service.
+    services: containers to be run and linked to the app container.
 
 ### Schedule SimpleDeploy to run in crontab
+  example
 
+    * * * * * /usr/bin/python3 /home/open_math/simpledeploy/simpledeploy.py >> /tmp/simpledeploy.log 2>&1
