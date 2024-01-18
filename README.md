@@ -119,3 +119,10 @@ SimpleDeploy works with any Git source control provider, making it a versatile t
   example
 
     * * * * * /usr/bin/python3 /home/open_math/simpledeploy/simpledeploy.py >> /tmp/simpledeploy.log 2>&1
+
+### To run manually
+  To run manually even if the repo is not change, run with flag -d or --deploy-anyway
+
+    $ python3 /home/open_math/simpledeploy/simpledeploy.py -d
+  Or
+    $ python3 /home/open_math/simpledeploy/simpledeploy.py --deploy-anyway

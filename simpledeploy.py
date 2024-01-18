@@ -1,7 +1,7 @@
 import os
 import subprocess
-import configparser
 import json
+import sys
 
 def this_script_dir():
     return os.path.dirname(os.path.realpath(__file__))
@@ -152,15 +152,19 @@ def git_clone_or_pull(repo_name, repo_dir):
         this_hash = subprocess.run(['git', 'rev-parse', 'HEAD'], stdout=subprocess.PIPE, text=True).stdout.strip()
         return prev_hash,this_hash
 
-
 def main():
+    deploy_anyway = False
+    if len(sys.argv) > 1:
+        if sys.argv[1] == '-d' or sys.argv[1] == '--deploy-anyway':
+            deploy_anyway = True
+
     repo = Repo('config.json')
     prev_hash, this_hash = git_clone_or_pull(repo.url, repo.dir)
 
     os.chdir(repo.dir)
     print(prev_hash, this_hash)
     # Check if there are any new commits since the last run
-    if prev_hash != this_hash:
+    if prev_hash != this_hash or deploy_anyway:
         app = App(repo)
         app.stop()
         app.start()
