@@ -33,7 +33,7 @@ class Container:
         self.volumes = cfg.get('volumes', [])
         self.work_dir = cfg.get('work_dir')
         self.envs = cfg.get('env', [])
-    def _command_list_to_string(self):
+    def _get_command(self):
         if isinstance(self.command, list):
             return ' '.join(self.command)
         return self.command
@@ -69,7 +69,7 @@ class Container:
         # add options before this line
         command.append(self.image)
         if self.command:
-            command.extend(['bash', '-c', self._command_list_to_string(self.command)])
+            command.extend(['bash', '-c', self._get_command()])
         subprocess.run(command, check=True)
 
     def _create_volumes(self):
