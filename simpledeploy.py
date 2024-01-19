@@ -161,6 +161,8 @@ def main():
         elif sys.argv[1] == '-r' or sys.argv[1] == '--rerun-only':
             rerun_only = True
 
+    prev_hash = ''
+    this_hash = ''
     repo = Repo('config.json')
     if not rerun_only:
         prev_hash, this_hash = git_clone_or_pull(repo.url, repo.dir)
