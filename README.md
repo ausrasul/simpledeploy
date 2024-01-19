@@ -120,9 +120,14 @@ SimpleDeploy works with any Git source control provider, making it a versatile t
 
     * * * * * /usr/bin/python3 /home/open_math/simpledeploy/simpledeploy.py >> /tmp/simpledeploy.log 2>&1
 
-### To run manually
-  To run manually even if the repo is not change, run with flag -d or --deploy-anyway
+### Options
 
-    $ python3 /home/open_math/simpledeploy/simpledeploy.py -d
-  Or
-    $ python3 /home/open_math/simpledeploy/simpledeploy.py --deploy-anyway
+  Pull repository and run the pipeline even if there are no changes to the git history of the repo.
+    $ python3 ./simpledeploy.py -d
+    Or
+    $ python3 ./simpledeploy.py --deploy-anyway
+
+  Don't pull repository, just run the pipeline.
+    $ python3 ./simpledeploy.py -r
+    Or
+    $ python3 ./simpledeploy.py -rerun-only

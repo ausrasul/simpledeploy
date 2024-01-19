@@ -154,17 +154,21 @@ def git_clone_or_pull(repo_name, repo_dir):
 
 def main():
     deploy_anyway = False
+    rerun_only = False
     if len(sys.argv) > 1:
         if sys.argv[1] == '-d' or sys.argv[1] == '--deploy-anyway':
             deploy_anyway = True
+        elif sys.argv[1] == '-r' or sys.argv[1] == '--rerun-only':
+            rerun_only = True
 
     repo = Repo('config.json')
-    prev_hash, this_hash = git_clone_or_pull(repo.url, repo.dir)
+    if not rerun_only:
+        prev_hash, this_hash = git_clone_or_pull(repo.url, repo.dir)
+        os.chdir(repo.dir)
+        print(prev_hash, this_hash)
 
-    os.chdir(repo.dir)
-    print(prev_hash, this_hash)
     # Check if there are any new commits since the last run
-    if prev_hash != this_hash or deploy_anyway:
+    if prev_hash != this_hash or deploy_anyway or rerun_only:
         app = App(repo)
         app.stop()
         app.start()
