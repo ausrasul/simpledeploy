@@ -3,6 +3,11 @@
         "dir": "../open_math",
         "cfg_file": "ci.json",
         "url": "https://github.com/ausrasul/open_math.git",
+        "git_auth": {
+            "require_auth": false,
+            "username": "ausrasul",
+            "access_token": "12345678910"
+        },
         "mount_dir": "/pipeline",
         "trigger": {
             "branch": "master",

@@ -20,6 +20,11 @@ class Repo:
         
         self.dir = os.path.join(script_dir, config['repo']['dir'])
         self.url = config['repo']['url']
+        auth = config['repo'].get('git_auth', {})
+        if auth['require_auth']:
+            username = auth['username']
+            access_token = auth['access_token']
+            self.url = self.url.replace('https://', f'https://{username}:{access_token}@')
         self.mount_dir = config['repo']['mount_dir']
         self.cfg_file = config['repo']['cfg_file']
 

@@ -54,6 +54,11 @@ SimpleDeploy works with any Git source control provider, making it a versatile t
             "dir": "../open_math",
             "cfg_file": "./ci.json",
             "url": "https://github.com/ausrasul/open_math.git",
+            "git_auth": {
+            "require_auth": false,
+                "username": "ausrasul",
+                "access_token": "12345678910"
+            },
             "mount_dir": "/pipeline",
             "trigger": {
                 "branch": "master",
@@ -66,6 +71,7 @@ SimpleDeploy works with any Git source control provider, making it a versatile t
        Relative directory from where SimpleDeploy is.
   cfg_file: the ci/cd config file, path relative to the repository.
   url: url to git repo.
+  git_auth: if a private repo, set require_auth to true and provide the access token.
   mount_dir: Where in the podman container the repository will be mounted.
   trigger: WIP.
 
