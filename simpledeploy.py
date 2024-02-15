@@ -20,6 +20,7 @@ class Repo:
         
         self.dir = os.path.join(script_dir, config['repo']['dir'])
         self.url = config['repo']['url']
+        self.branch = config['repo'].get('branch', 'main')
         auth = config['repo'].get('git_auth', {})
         if auth['require_auth']:
             username = auth['username']
@@ -140,25 +141,25 @@ class App:
         for service in self.services:
             service.stop()
 
-def clone_repo_if_not_exist(repo_name, repo_dir):
+def clone_repo_if_not_exist(repo_name, repo_dir, repo_branch):
     if not os.path.exists(repo_dir):
         # Clone the repo if it doesn't exist
-        subprocess.run(['git', 'clone', repo_name, repo_dir], check=True)
+        subprocess.run(['git', 'clone', '-b', repo_branch, repo_name, repo_dir], check=True)
         return True
     else:
         return False
 
-def git_clone_or_pull(repo_name, repo_dir):
+def git_clone_or_pull(repo_name, repo_dir, repo_branch):
     # Change to the directory specified in the configuration file
-    cloned = clone_repo_if_not_exist(repo_name, repo_dir)
+    cloned = clone_repo_if_not_exist(repo_name, repo_dir, repo_branch)
     if cloned:
         return 1, 2
     else:
         os.chdir(repo_dir)
         prev_hash = subprocess.run(['git', 'rev-parse', 'HEAD'], stdout=subprocess.PIPE, text=True).stdout.strip()
-        subprocess.run(['git', 'pull'], check=True)
+        subprocess.run(['git', 'pull', 'origin', repo_branch], check=True)
         this_hash = subprocess.run(['git', 'rev-parse', 'HEAD'], stdout=subprocess.PIPE, text=True).stdout.strip()
-        return prev_hash,this_hash
+        return prev_hash, this_hash
 
 def main():
     deploy_anyway = False
@@ -173,7 +174,7 @@ def main():
     this_hash = ''
     repo = Repo('config.json')
     if not rerun_only:
-        prev_hash, this_hash = git_clone_or_pull(repo.url, repo.dir)
+        prev_hash, this_hash = git_clone_or_pull(repo.url, repo.dir, repo.branch)
         os.chdir(repo.dir)
         print(prev_hash, this_hash)
 
