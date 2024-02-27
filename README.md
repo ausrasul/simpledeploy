@@ -54,6 +54,7 @@ SimpleDeploy works with any Git source control provider, making it a versatile t
             "dir": "../open_math",
             "cfg_file": "./ci.json",
             "url": "https://github.com/ausrasul/open_math.git",
+            "branch": "some-feature-branch-name",
             "git_auth": {
             "require_auth": false,
                 "username": "ausrasul",
@@ -67,13 +68,15 @@ SimpleDeploy works with any Git source control provider, making it a versatile t
         }
     }
 
-  dir: Where the code repo will be cloned.
-       Relative directory from where SimpleDeploy is.
-  cfg_file: the ci/cd config file, path relative to the repository.
-  url: url to git repo.
-  git_auth: if a private repo, set require_auth to true and provide the access token.
-  mount_dir: Where in the podman container the repository will be mounted.
-  trigger: WIP.
+
+    dir: Where the code repo will be cloned.
+         Relative directory from where SimpleDeploy is.
+    cfg_file: the ci/cd config file, path relative to the repository.
+    url: url to git repo.
+    branch: default is "main", specify the branch that you want to simpledeploy to target for deployment.
+    git_auth: if a private repo, set require_auth to true and provide the access token.
+    mount_dir: Where in the podman container the repository will be mounted.
+    trigger: WIP.
 
 ### Configure your project
   In your repository, create a json file (must be placed in "cfg_file" directory specified above) and configure it:
@@ -121,10 +124,36 @@ SimpleDeploy works with any Git source control provider, making it a versatile t
         ports: ports to be published, unique per pod, should not conflict with ports from service.
     services: containers to be run and linked to the app container.
 
+#### Longer command chain
+You can also write longer command to run.
+
+Instead of providing command as string ```command": "node ./server.js"```
+
+You can provide it as a list of commands, each command must end with semicolon to be concatenated.
+
+    "command": [
+        "cd /simpledeploy/config;",
+        "make;",
+        "cd /simpledeploy/etc/;",
+        "cp myconf myconf.bak;",
+        "sed -i 's/conf_name$/conf_name2/g' ./conf;",
+        "make;",
+        "mv myconf.bak myconf;",
+        "node ./server.js"
+    ],
+    
 ### Schedule SimpleDeploy to run in crontab
   example
 
     * * * * * /usr/bin/python3 /home/open_math/simpledeploy/simpledeploy.py >> /tmp/simpledeploy.log 2>&1
+
+### Troubleshoot
+
+A common issue is that podman will exit as soon as you logout.
+
+To solve this, start podman with systemd, alternatively set enable-linger to the user that started podman.
+
+    $ loginctl enable-linger [USER]
 
 ### Options
 
