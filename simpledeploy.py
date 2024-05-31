@@ -162,6 +162,7 @@ def git_clone_or_pull(repo_name, repo_dir, repo_branch):
         return prev_hash, this_hash
 
 def main():
+    print("Time: ", os.popen('date').read())
     deploy_anyway = False
     rerun_only = False
     if len(sys.argv) > 1:
