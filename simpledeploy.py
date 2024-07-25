@@ -144,7 +144,7 @@ class App:
 def clone_repo_if_not_exist(repo_name, repo_dir, repo_branch):
     if not os.path.exists(repo_dir):
         # Clone the repo if it doesn't exist
-        subprocess.run(['git', 'clone', '-b', repo_branch, repo_name, repo_dir], check=True)
+        subprocess.run(['git', 'clone', '-c http.sslVerify=false', '-b', repo_branch, repo_name, repo_dir], check=True)
         return True
     else:
         return False
@@ -157,7 +157,7 @@ def git_clone_or_pull(repo_name, repo_dir, repo_branch):
     else:
         os.chdir(repo_dir)
         prev_hash = subprocess.run(['git', 'rev-parse', 'HEAD'], stdout=subprocess.PIPE, text=True).stdout.strip()
-        subprocess.run(['git', 'pull', 'origin', repo_branch], check=True)
+        subprocess.run(['git', 'pull', '-c http.sslVerify=false', 'origin', repo_branch], check=True)
         this_hash = subprocess.run(['git', 'rev-parse', 'HEAD'], stdout=subprocess.PIPE, text=True).stdout.strip()
         return prev_hash, this_hash
 
