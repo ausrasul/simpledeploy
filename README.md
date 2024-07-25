@@ -155,6 +155,14 @@ To solve this, start podman with systemd, alternatively set enable-linger to the
 
     $ loginctl enable-linger [USER]
 
+Another issue is podman requires fully qualified images if they are pulled from dockerhub
+Add docker.io to the unqualified search registries in podman:
+    $ vi /etc/containers/registries.conf
+
+then add:
+
+    unqualified-search-registries = ["docker.io"]
+
 ### Options
 
   Pull repository and run the pipeline even if there are no changes to the git history of the repo.
