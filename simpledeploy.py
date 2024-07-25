@@ -157,7 +157,7 @@ def git_clone_or_pull(repo_name, repo_dir, repo_branch):
     else:
         os.chdir(repo_dir)
         prev_hash = subprocess.run(['git', 'rev-parse', 'HEAD'], stdout=subprocess.PIPE, text=True).stdout.strip()
-        subprocess.run(['git', 'pull', '-c http.sslVerify=false', 'origin', repo_branch], check=True)
+        subprocess.run(['git', 'pull', 'origin', repo_branch], check=True)
         this_hash = subprocess.run(['git', 'rev-parse', 'HEAD'], stdout=subprocess.PIPE, text=True).stdout.strip()
         return prev_hash, this_hash
 
