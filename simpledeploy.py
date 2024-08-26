@@ -57,11 +57,16 @@ class Container:
             return ' '.join(self.command)
         return self.command
     def _remove(self):
-        run_command(['podman', 'rm', '-f', self.name])
+        try:
+            run_command(['podman', 'rm', '-f', self.name])
+        except:
+            pass
         
     def stop(self):
-        run_command(['podman', 'stop', self.name])
-        self._remove()
+        try:
+            run_command(['podman', 'stop', self.name])
+        finally:
+            self._remove()
     
     def start(self, podname):
         self._create_volumes()
