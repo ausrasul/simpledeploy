@@ -65,6 +65,8 @@ class Container:
     def stop(self):
         try:
             run_command(['podman', 'stop', self.name])
+        except:
+            pass
         finally:
             self._remove()
     
