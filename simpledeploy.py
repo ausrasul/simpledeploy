@@ -3,6 +3,19 @@ import subprocess
 import json
 import sys
 
+def run_command(command, **kwargs):
+    try:
+        result = subprocess.run(command, check=True, **kwargs)
+        print(f"command output: {result.stdout}")
+        if result.stderr:
+            print(f"command error: {result.stderr}")
+        result.check_returncode()
+        return result
+    except subprocess.CalledProcessError as e:
+        print(f"command '{' '.join(command)}' failed with return code {e.returncode}")
+        print(f"command error: {e.stderr}")
+        raise
+
 def this_script_dir():
     return os.path.dirname(os.path.realpath(__file__))
 
@@ -44,20 +57,11 @@ class Container:
             return ' '.join(self.command)
         return self.command
     def _remove(self):
-        try:
-            subprocess.run(['podman', 'rm', '-f', self.name], check=True)
-            print(f"Container {self.name} removed.")
-        except subprocess.CalledProcessError as e:
-            print(f"An error occurred: {e.stderr}")
-
+        run_command(['podman', 'rm', '-f', self.name])
+        
     def stop(self):
-        try:
-            subprocess.run(['podman', 'stop', self.name], check=True)
-            print(f"Container {self.name} stopped.")
-        except subprocess.CalledProcessError as e:
-            print(f"An error occurred: {e.stderr}")
-        finally:
-            self._remove()
+        run_command(['podman', 'stop', self.name])
+        self._remove()
     
     def start(self, podname):
         self._create_volumes()
@@ -76,16 +80,11 @@ class Container:
         command.append(self.image)
         if self.command:
             command.extend(['bash', '-c', self._get_command()])
-        subprocess.run(command, check=True)
+        run_command(command)
 
     def _create_volumes(self):
         for volume in self.volume_names:
-            try:
-                subprocess.run(['podman', 'volume', 'create', volume], check=True)
-                print(f"Volume {volume} created.")
-            except subprocess.CalledProcessError as e:
-                print(f"An error occurred: {e.stderr}")
-
+            run_command(['podman', 'volume', 'create', volume])
 
 class App:
     def __init__(self, repo):
@@ -115,12 +114,12 @@ class App:
         for service in self.services:
             for port in service.ports:
                 command.extend(['-p', port])
-        subprocess.run(command, check=True)
+        run_command(command)
     def _remove_pod(self):
         command = ['podman', 'pod', 'rm', '-f', self.name]
         for _ in range(3):  # Retry the command 3 times
             try:
-                subprocess.run(command, check=True, timeout=5)
+                run_command(command, timeout=5)
                 break  # Break the loop if the command succeeds
             except:
                 continue  # Retry the command if it fails
@@ -144,7 +143,7 @@ class App:
 def clone_repo_if_not_exist(repo_name, repo_dir, repo_branch):
     if not os.path.exists(repo_dir):
         # Clone the repo if it doesn't exist
-        subprocess.run(['git', 'clone', '-c http.sslVerify=false', '-b', repo_branch, repo_name, repo_dir], check=True)
+        run_command(['git', 'clone', '-c http.sslVerify=false', '-b', repo_branch, repo_name, repo_dir])
         return True
     else:
         return False
