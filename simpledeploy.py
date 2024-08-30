@@ -2,18 +2,20 @@ import os
 import subprocess
 import json
 import sys
-
+def log(msg, level='INFO'):
+    time = os.popen('date').read().strip()
+    print(f"{time} [{level}]: {msg}")
+    
 def run_command(command, **kwargs):
     try:
         result = subprocess.run(command, check=True, **kwargs)
-        print(f"command output: {result.stdout}")
+        log(f"command output: {result.stdout}")
         if result.stderr:
-            print(f"command error: {result.stderr}")
-        result.check_returncode()
+            log(f"command error: {result.stderr}", 'ERROR')
         return result
     except subprocess.CalledProcessError as e:
-        print(f"command '{' '.join(command)}' failed with return code {e.returncode}")
-        print(f"command error: {e.stderr}")
+        log(f"command '{' '.join(command)}' failed with return code {e.returncode}", 'ERROR')
+        log(f"command error: {e.stderr}", 'ERROR')
         raise
 
 def this_script_dir():
@@ -58,14 +60,18 @@ class Container:
         return self.command
     def _remove(self):
         try:
+            log(f"Removing container {self.name}")
             run_command(['podman', 'rm', '-f', self.name])
         except:
+            log(f"Failed to remove container {self.name}", 'ERROR')
             pass
         
     def stop(self):
         try:
+            log(f"Stopping container {self.name}")
             run_command(['podman', 'stop', self.name])
         except:
+            log(f"Failed to stop container {self.name}", 'ERROR')
             pass
         finally:
             self._remove()
@@ -87,10 +93,12 @@ class Container:
         command.append(self.image)
         if self.command:
             command.extend(['bash', '-c', self._get_command()])
+        log(f"Starting container {self.name}")
         run_command(command)
 
     def _create_volumes(self):
         for volume in self.volume_names:
+            log(f"Creating volume {volume}")
             run_command(['podman', 'volume', 'create', volume])
 
 class App:
@@ -121,14 +129,17 @@ class App:
         for service in self.services:
             for port in service.ports:
                 command.extend(['-p', port])
+        log(f"Creating pod {self.name}")
         run_command(command)
     def _remove_pod(self):
         command = ['podman', 'pod', 'rm', '-f', self.name]
         for _ in range(3):  # Retry the command 3 times
             try:
+                log(f"Removing pod {self.name}")
                 run_command(command, timeout=5)
                 break  # Break the loop if the command succeeds
             except:
+                log(f"Failed to remove pod {self.name}, retry", 'ERROR')
                 continue  # Retry the command if it fails
 
     def start(self):
@@ -141,7 +152,6 @@ class App:
         self._services_stop()
     def _services_start(self):
         for service in self.services:
-            print(service)
             service.start(podname=self.name)
     def _services_stop(self):
         for service in self.services:
@@ -150,6 +160,7 @@ class App:
 def clone_repo_if_not_exist(repo_name, repo_dir, repo_branch):
     if not os.path.exists(repo_dir):
         # Clone the repo if it doesn't exist
+        log(f"Cloning {repo_name} to {repo_dir}")
         run_command(['git', 'clone', '-c http.sslVerify=false', '-b', repo_branch, repo_name, repo_dir])
         return True
     else:
@@ -162,13 +173,13 @@ def git_clone_or_pull(repo_name, repo_dir, repo_branch):
         return 1, 2
     else:
         os.chdir(repo_dir)
-        prev_hash = subprocess.run(['git', 'rev-parse', 'HEAD'], stdout=subprocess.PIPE, text=True).stdout.strip()
+        prev_hash = run_command(['git', 'rev-parse', 'HEAD'], stdout=subprocess.PIPE, text=True).stdout.strip()
         subprocess.run(['git', 'pull', 'origin', repo_branch], check=True)
         this_hash = subprocess.run(['git', 'rev-parse', 'HEAD'], stdout=subprocess.PIPE, text=True).stdout.strip()
         return prev_hash, this_hash
 
 def main():
-    print("Time: ", os.popen('date').read())
+    log("Starting deployment")
     deploy_anyway = False
     rerun_only = False
     if len(sys.argv) > 1:
@@ -183,7 +194,7 @@ def main():
     if not rerun_only:
         prev_hash, this_hash = git_clone_or_pull(repo.url, repo.dir, repo.branch)
         os.chdir(repo.dir)
-        print(prev_hash, this_hash)
+        log(f"{prev_hash}, {this_hash}")
 
     # Check if there are any new commits since the last run
     if prev_hash != this_hash or deploy_anyway or rerun_only:
