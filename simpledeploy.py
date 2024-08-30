@@ -147,9 +147,9 @@ class App:
         self._services_start()
         self.container.start(podname=self.name)
     def stop(self):
-        self._remove_pod()
         self.container.stop()
         self._services_stop()
+        self._remove_pod()
     def _services_start(self):
         for service in self.services:
             service.start(podname=self.name)
