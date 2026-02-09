@@ -54,6 +54,7 @@ class Container:
         self.volumes = cfg.get('volumes', [])
         self.work_dir = cfg.get('work_dir')
         self.envs = cfg.get('env', [])
+        self.network = cfg.get('network')
     def _get_command(self):
         if isinstance(self.command, list):
             return ' '.join(self.command)
@@ -129,7 +130,9 @@ class App:
         for service in self.services:
             for port in service.ports:
                 command.extend(['-p', port])
-        log(f"Creating pod {self.name}")
+        if self.container.network:
+            command.extend(['--network', self.container.network])
+        log(f"Creating pod {self.name} ({command})")
         run_command(command)
     def _remove_pod(self):
         command = ['podman', 'pod', 'rm', '-f', self.name]
