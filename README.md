@@ -10,36 +10,38 @@ The deployment server doesn't need to provide access for a CI/CD pipeline.
 
 SimpleDeploy works with any Git source control provider, making it a versatile tool for various development environments.
 
-              +------------+
-              |  Git Repo  |
-              +------------+
-                    |
-                    v
-        +------------------------+
-        |   Deployment Server    |
-        |  Running SimpleDeploy  |
-        |                        |
-        |  +------------------+  |
-        |  | Pull Latest Code |  |
-        |  +------------------+  |
-        |    on new | commits    |
-        |           v            |
-        |  +------------------+  |
-        |  | Read Config File |  |
-        |  +------------------+  |
-        |           |            |
-        |           v            |
-        |  +------------------+  |
-        |  | Execute Workflow |  |
-        |  +------------------+  |
-        |           |            |
-        |           v            |
-        |  +------------------+  |
-        |  | Generate Report  |  |
-        |  |        Or        |  |
-        |  |  Serve content   |  |
-        |  +------------------+  |
-        +------------------------+
+```
+          +------------+
+          |  Git Repo  |
+          +------------+
+                |
+                v
+    +------------------------+
+    |   Deployment Server    |
+    |  Running SimpleDeploy  |
+    |                        |
+    |  +------------------+  |
+    |  | Pull Latest Code |  |
+    |  +------------------+  |
+    |    on new | commits    |
+    |           v            |
+    |  +------------------+  |
+    |  | Read Config File |  |
+    |  +------------------+  |
+    |           |            |
+    |           v            |
+    |  +------------------+  |
+    |  | Execute Workflow |  |
+    |  +------------------+  |
+    |           |            |
+    |           v            |
+    |  +------------------+  |
+    |  | Generate Report  |  |
+    |  |        Or        |  |
+    |  |  Serve content   |  |
+    |  +------------------+  |
+    +------------------------+
+```
 
 
 ## Usage
@@ -91,11 +93,16 @@ SimpleDeploy works with any Git source control provider, making it a versatile t
             "hostname": "open_math",
             "image": "node:18",
             "command": "node ./server.js",
+            "network": "my_network",
             "env": [
                 "NODE_ENV=production"
             ],
             "ports": [
                 "8080:3001"
+            ],
+            "secrets": [
+                { "secret": "db_password" },
+                { "secret": "api_key", "type": "env", "target": "API_KEY" }
             ]
         },
         "services": [
@@ -120,14 +127,34 @@ SimpleDeploy works with any Git source control provider, making it a versatile t
         hostname: hostname (this is not supported yet, the pod's name is used instead)
         image: podman/docker image name and version
         command: command used as entry point.
+        network: optional, podman network name the pod will be connected to.
         env: env.
         ports: ports to be published, unique per pod, should not conflict with ports from service.
+        secrets: optional, list of podman secrets to pass to the container (see Secrets section below).
     services: containers to be run and linked to the app container.
+
+#### Secrets
+
+Secrets must be pre-created on the host before deploying:
+
+    $ echo "my_db_password" | podman secret create db_password -
+
+Then reference them in the config file as a list of objects:
+
+    "secrets": [
+        { "secret": "db_password" },
+        { "secret": "api_key", "type": "env", "target": "API_KEY" },
+        { "secret": "tls_cert", "target": "/certs/tls.crt" }
+    ]
+
+    secret: (required) name of the podman secret.
+    type: (optional) "mount" (default) or "env". Mount exposes the secret as a file, env as an environment variable.
+    target: (optional) mount path or environment variable name. Defaults to /run/secrets/<secret_name> for mount type.
 
 #### Longer command chain
 You can also write longer command to run.
 
-Instead of providing command as string ```command": "node ./server.js"```
+Instead of providing command as string `"command": "node ./server.js"`
 
 You can provide it as a list of commands, each command must end with semicolon to be concatenated.
 
@@ -155,8 +182,9 @@ To solve this, start podman with systemd, alternatively set enable-linger to the
 
     $ loginctl enable-linger [USER]
 
-Another issue is podman requires fully qualified images if they are pulled from dockerhub
+Another issue is podman requires fully qualified images if they are pulled from dockerhub.
 Add docker.io to the unqualified search registries in podman:
+
     $ vi /etc/containers/registries.conf
 
 then add:
@@ -165,12 +193,18 @@ then add:
 
 ### Options
 
-  Pull repository and run the pipeline even if there are no changes to the git history of the repo.
+Pull repository and run the pipeline even if there are no changes to the git history of the repo.
+
     $ python3 ./simpledeploy.py -d
-    Or
+
+Or
+
     $ python3 ./simpledeploy.py --deploy-anyway
 
-  Don't pull repository, just run the pipeline.
+Don't pull repository, just run the pipeline.
+
     $ python3 ./simpledeploy.py -r
-    Or
-    $ python3 ./simpledeploy.py -rerun-only
+
+Or
+
+    $ python3 ./simpledeploy.py --rerun-only

@@ -55,6 +55,7 @@ class Container:
         self.work_dir = cfg.get('work_dir')
         self.envs = cfg.get('env', [])
         self.network = cfg.get('network')
+        self.secrets = cfg.get('secrets', [])
     def _get_command(self):
         if isinstance(self.command, list):
             return ' '.join(self.command)
@@ -90,6 +91,13 @@ class Container:
             command.extend(['-w', self.work_dir])
         for env in self.envs:
             command.extend(['-e', env])
+        for s in self.secrets:
+            secret_arg = s['secret']
+            if 'type' in s:
+                secret_arg += f",type={s['type']}"
+            if 'target' in s:
+                secret_arg += f",target={s['target']}"
+            command.extend(['--secret', secret_arg])
         # add options before this line
         command.append(self.image)
         if self.command:
